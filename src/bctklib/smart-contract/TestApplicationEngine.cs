@@ -8,6 +8,7 @@ using Neo.Cryptography;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 
 namespace Neo.BlockchainToolkit.SmartContract
 {
@@ -34,6 +35,31 @@ namespace Neo.BlockchainToolkit.SmartContract
 
                 builder.Add(sysCallHash, descriptor);
             }
+        }
+
+        public static Block CreateDummyBlock(DataCache snapshot, ProtocolSettings settings)
+        {
+            var hash = NativeContract.Ledger.CurrentHash(snapshot);
+            var currentBlock = NativeContract.Ledger.GetBlock(snapshot, hash);
+
+            return new Block
+            {
+                Header = new Header
+                {
+                    Version = 0,
+                    PrevHash = hash,
+                    MerkleRoot = new UInt256(),
+                    Timestamp = currentBlock.Timestamp + settings.MillisecondsPerBlock,
+                    Index = currentBlock.Index + 1,
+                    NextConsensus = currentBlock.NextConsensus,
+                    Witness = new Witness
+                    {
+                        InvocationScript = Array.Empty<byte>(),
+                        VerificationScript = Array.Empty<byte>()
+                    },
+                },
+                Transactions = Array.Empty<Transaction>()
+            };
         }
 
         private readonly WitnessChecker witnessChecker;
